@@ -5,6 +5,7 @@ import random
 from PIL import Image
 import base64
 from io import BytesIO
+import time
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Wealth Calculator", layout="centered")
@@ -22,21 +23,48 @@ logo_base64 = pil_to_base64(logo)
 
 st.markdown(
     f"""
-    <div style="display: flex; align-items: center;">
-        <img src="data:image/png;base64,{logo_base64}" width="60" style="margin-right: 15px;">
-        <div>
-            <h2 style="margin-bottom: 0;">Compound Interest Calculator</h2>
-            <p style="margin-top: 2px;">Learn to build wealth with the power of compounding.</p>
+    <div style="display: flex; align-items: center; gap: 15px; padding-top: 20px; padding-bottom: 10px;">
+        <img src="data:image/png;base64,{logo_base64}" width="60">
+        <div style="line-height: 1.2;">
+            <h2 style="margin: 0;">Compound Interest Calculator</h2>
+            <p style="margin: 0; font-size: 16px;">Learn to build wealth with the power of compounding.</p>
         </div>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# --- Info Box ---
+# --- Global Spacing & Styling Tweaks ---
+st.markdown(
+    """
+    <style>
+    h1, h2, h3, h4, h5, h6 {
+        margin-bottom: 0.2rem;
+        margin-top: 0.5rem;
+    }
+    .stNumberInput, .stSelectbox, .stTextInput, .stDateInput, .stRadio, .stMarkdown p {
+        margin-bottom: 0.3rem;
+    }
+    section.main > div {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    div.stButton > button {
+        display: block;
+        margin: 0 auto;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# --- Calculator Inputs ---
 st.info("Over the past 30 years, the average annual return of the S&P 500 has been approximately 10%. You can use this as a historical benchmark when estimating your interest rate.")
 
-# --- Inputs ---
 st.markdown("#### Initial Investment")
 st.caption("This is the first step to building long-term wealth.")
 initial = st.number_input("Initial Investment *", min_value=0.0, value=0.0, step=100.0, format="%.2f")
@@ -59,36 +87,15 @@ range_offset = st.number_input("Interest Rate Variance Range", min_value=0.0, va
 
 st.markdown("#### Compound Frequency")
 st.caption("More frequent compounding can enhance your long-term gains.")
-frequency_option = st.radio("Compound Frequency", ["Annually", "Quarterly", "Monthly", "Daily"])
+frequency_option = st.selectbox("Compound Frequency", ["Annually", "Quarterly", "Monthly", "Daily"], index=0)
 
-frequency_map = {
-    "Annually": 1,
-    "Quarterly": 4,
-    "Monthly": 12,
-    "Daily": 365
-}
+# --- Calculate Button ---
+calculate_clicked = st.button("Calculate")
 
-# --- Calculate Button Centered ---
-st.markdown(
-    """
-    <style>
-        div.stButton > button {
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+if calculate_clicked:
+    st.markdown("---", unsafe_allow_html=True)
 
-if st.button("Calculate"):
-    st.markdown("---")
-    st.subheader("The Results Are In")
-
-    st.write(f"Initial Investment: **${initial:,.2f}**")
-    st.write(f"Monthly Contribution: **${monthly:,.2f}**")
-
-    compound_per_year = frequency_map[frequency_option]
+    compound_per_year = {"Annually": 1, "Quarterly": 4, "Monthly": 12, "Daily": 365}[frequency_option]
     year_range = range(0, years + 1)
     df = pd.DataFrame()
 
@@ -118,7 +125,14 @@ if st.button("Calculate"):
     df["Total Contributions"] = [initial + monthly * t * compound_per_year for t in year_range]
 
     final_value = df[labels[len(labels)//2]].iloc[-1]
-    st.markdown(f"In **{years} years**, you could have **${final_value:,.2f}** based on your inputs.")
+
+    st.subheader("The Results Are In")
+    st.markdown(f"In **{years} years**, you will have **${final_value:,.2f}**.")
+    st.markdown("""
+The chart below shows an estimate of how much your initial savings will grow over time, according to the interest rate and compounding schedule you specified.
+
+Please remember that slight adjustments in any of those variables can affect the outcome. Reset the calculator and provide different figures to show different scenarios.
+""")
 
     fig = go.Figure()
     for i, label in enumerate(labels):
@@ -133,7 +147,7 @@ if st.button("Calculate"):
         legend_title="Scenario",
         plot_bgcolor="white",
         font=dict(family="Helvetica, Arial, sans-serif", size=18),
-        height=700,
+        height=400,
         margin=dict(l=20, r=20, t=50, b=40),
         showlegend=True
     )
@@ -142,23 +156,56 @@ if st.button("Calculate"):
 
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-    # CTA Quote
-messages = [
-    "Let’s change your financial future, one dollar at a time.",
-    "The best time to invest was yesterday. The next best time is today.",
-    "Start small. Stay consistent. Let compounding do the heavy lifting.",
-    "Your future self will thank you for the steps you take today.",
-    "Big dreams start with small, consistent contributions.",
-    "Wealth isn't built overnight. It's built with purpose, patience, and persistence.",
-    "No amount is too small to begin. Just begin.",
-    "Turn time into your greatest asset. Start investing today."
-]
-st.markdown("---")
-st.markdown(
-    f"""
-    <div class='cta-container' style='font-size: 22px; text-align: center; margin-top: 20px;'>
-        {random.choice(messages)}
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    # Reduce spacing before CTA
+    st.markdown(
+        """
+        <style>
+        .cta-container {
+            margin-top: 0.5rem !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- CTA ---
+    random.seed(time.time())
+    messages = [
+        "Let’s change your financial future, one dollar at a time.",
+        "The best time to invest was yesterday. The next best time is today.",
+        "Start small. Stay consistent. Let compounding do the heavy lifting.",
+        "Your future self will thank you for the steps you take today.",
+        "Big dreams start with small, consistent contributions.",
+        "Wealth isn't built overnight. It's built with purpose, patience, and persistence.",
+        "No amount is too small to begin. Just begin.",
+        "Turn time into your greatest asset. Start investing today."
+    ]
+    st.markdown("---")
+    st.markdown(
+        f"""
+        <div class='cta-container' style='font-size: 22px; text-align: center;'>
+            {random.choice(messages)}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- Next Steps ---
+    st.markdown("---")
+    with st.expander("🧭 Next Steps", expanded=False):
+        st.markdown("""
+1. **Set a Monthly Contribution Goal**  
+   Even $50/month can grow significantly over time. Start small — just stay consistent.
+
+2. **Explore Tax-Advantaged Accounts**  
+   Consider a Roth IRA or 401(k) if available. These accounts help your investments grow tax-free or tax-deferred.
+
+3. **Track Your Spending**  
+   Use a budgeting app or spreadsheet to find extra money to invest.
+
+4. **Keep Learning**  
+   Read books like *The Psychology of Money* or *The Simple Path to Wealth*.
+
+5. **Talk to a Financial Professional**  
+   A licensed advisor can help tailor a plan based on your goals.
+        """)
