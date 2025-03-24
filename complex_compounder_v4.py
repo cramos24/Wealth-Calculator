@@ -141,15 +141,17 @@ Please remember that slight adjustments in any of those variables can affect the
     fig.add_trace(go.Scatter(x=df["Year"], y=df["Total Contributions"], mode='lines+markers', name="Total Contributions", line=dict(color="green", dash='dot')))
 
     fig.update_layout(
-        title="Total Savings Over Time",
-        xaxis_title="Year",
-        yaxis_title="US Dollars",
-        legend_title="Scenario",
-        plot_bgcolor="white",
-        font=dict(family="Helvetica, Arial, sans-serif", size=18),
-        height=400,
-        margin=dict(l=20, r=20, t=50, b=40),
-        showlegend=True
+    title="Total Savings Over Time",
+    xaxis_title="Year",
+    yaxis_title="US Dollars",
+    legend_title="Scenario",
+    plot_bgcolor="white",
+    font=dict(family="Helvetica, Arial, sans-serif", size=16),
+    height=400,
+    autosize=True,
+    margin=dict(l=10, r=10, t=40, b=30),
+    legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+    showlegend=True
     )
 
     fig.update_yaxes(tickprefix="$", tickformat=",.0f")
@@ -189,7 +191,7 @@ Please remember that slight adjustments in any of those variables can affect the
         """,
         unsafe_allow_html=True
     )
-
+    
     # --- Next Steps ---
     st.markdown("---")
     with st.expander("🧭 Next Steps", expanded=False):
